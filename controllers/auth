@@ -1,0 +1,69 @@
+var validator = require('validator')
+var EventProxy = require('eventproxy')
+
+
+var util = require('../util/util')
+var ep = new EventProxy()
+
+/**
+ * *********************util functions**********************
+ */
+
+function bindEp() {
+    ep.on('validate_err',function (msg) {
+        res.status(422).send({
+            error: msg
+        })
+        return
+    })
+
+
+}
+
+/**
+ * *********************util functions**********************
+ */
+
+exports.signup = function (req,res,next) {
+    /**
+     * ep的监听事件
+     */
+
+    bindEp();
+    ep.fail(next)// error时，unbind所有handler,并执行next
+    var result = util.validate(req);
+    if (!result.valid) {
+        ep.emit('validate_err', result.msg)
+        return
+    }
+}
+
+exports.showSignup = function (req,res,next) {
+    res.end(" sign up ")
+}
+
+exports.showSignin = function (req,res,next) {
+    res.end(" sign up ")
+}
+
+exports.signin = function (req,res,next) {
+    res.end(" sign up ")
+}
+exports.signout = function (req,res,next) {
+    res.end(" sign up ")
+}
+
+exports.updatePassword = function (req,res,next) {
+    res.end(" sign up ")
+}
+
+exports.showRetrievePass = function (req,res,next) {
+    res.end(" sign up ")
+}
+
+exports.resetPassword = function (req,res,next) {
+    res.end(" sign up ")
+}
+exports.retrievePass = function (req,res,next) {
+    res.end(" sign up ")
+}
