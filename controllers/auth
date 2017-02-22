@@ -2,23 +2,15 @@ var validator = require('validator')
 var EventProxy = require('eventproxy')
 
 
-var util = require('../util/util')
+var util = require('../util/index').util
+var tools = require('../util/index').tools
+
+var User = require('../modelHelper/index').User
 var ep = new EventProxy()
 
 /**
  * *********************util functions**********************
  */
-
-function bindEp() {
-    ep.on('validate_err',function (msg) {
-        res.status(422).send({
-            error: msg
-        })
-        return
-    })
-
-
-}
 
 /**
  * *********************util functions**********************
@@ -29,13 +21,63 @@ exports.signup = function (req,res,next) {
      * ep的监听事件
      */
 
-    bindEp();
+    ep.on('validate_err',function (msg) {
+        res.status(422).send({
+            error: msg
+        })
+        return
+    })
     ep.fail(next)// error时，unbind所有handler,并执行next
+
+    var username = req.body.username,
+        email = req.body.email,
+        pass = req.body.password,
+        confirmPass = req.body.confirmPass;
+        
+    //初步验证数据
     var result = util.validate(req);
     if (!result.valid) {
         ep.emit('validate_err', result.msg)
         return
     }
+    //查看数据库
+
+    const orCondition = [
+        {username:username},
+        {email: email}
+    ]
+    User.getUsersByOrQuery(orCondition,{},function (err,users) {
+        if(err){
+            return next(err)
+        }
+        if(users.length>0){
+            ep.emit("validate_err","用户名/邮箱已被注册，请更换");
+            return
+        }
+        tools.hash(pass,function (err,passHash) {
+            if(err) return next(err);
+            const user = {
+                username,
+                email,
+                pass: passHash
+            }
+            User.createAndSave(user,(err)=>{
+                if(err) return next(err);
+            })
+            res.status(201).send({
+                msg: "创建成功"
+            })
+            //redirect
+            // res.status(201).
+        })
+
+
+    })
+
+
+
+
+
 }
 
 exports.showSignup = function (req,res,next) {

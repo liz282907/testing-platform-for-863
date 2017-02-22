@@ -1,0 +1,11 @@
+var model = require('../models/index')
+var User = model.User
+
+exports.getUsersByOrQuery = function (query, opt, callback) {
+    User.find().or(query).exec(callback);
+}
+
+exports.createAndSave = (userObj,cb)=>{
+    const user = new User(userObj)
+    user.save(cb);
+}
