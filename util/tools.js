@@ -10,3 +10,4 @@ exports.hash = function (pass,cb) {
 exports.compareHash = (pass,hashedPass,cb)=>{
     bcrypt.compare(pass, hashedPass, cb);
 }
+

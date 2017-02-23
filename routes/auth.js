@@ -16,7 +16,7 @@ router.post('/signout',auth.signout)
 
 //登录
 router.get('/signin',auth.showSignin)
-router.post('/signup',auth.signin)
+router.post('/signin',auth.signin)
 
 //重置密码
 router.post('/reset_pass',auth.updatePassword)

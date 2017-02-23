@@ -4,6 +4,7 @@ var EventProxy = require('eventproxy')
 
 var util = require('../util/index').util
 var tools = require('../util/index').tools
+var authMiddleware = require('../middleWares/auth')
 
 var User = require('../modelHelper/index').User
 var ep = new EventProxy()
@@ -25,6 +26,7 @@ exports.signup = function (req,res,next) {
         res.status(422).send({
             error: msg
         })
+        // res.redirect('back')
         return
     })
     ep.fail(next)// error时，unbind所有handler,并执行next
@@ -67,8 +69,7 @@ exports.signup = function (req,res,next) {
             res.status(201).send({
                 msg: "创建成功"
             })
-            //redirect
-            // res.status(201).
+            exports.signin(req,res,next);
         })
 
 
@@ -89,10 +90,53 @@ exports.showSignin = function (req,res,next) {
 }
 
 exports.signin = function (req,res,next) {
-    res.end(" sign up ")
+
+    let loginname = validator.trim(req.body.username),
+        password = validator.trim(req.body.password);
+
+    ep.on('login_err',function (msg) {
+        res.status(401).send({
+            error: msg
+        })
+        return
+    })
+
+    if(!loginname || !password){
+        res.status(422).send({
+            error: '信息不完整'
+        })
+        return
+    }
+
+    let getUser;
+    if(loginname.indexOf('@')!==-1){
+        getUser = User.getUserByMail
+    }else
+        getUser = User.getUserByName
+
+    getUser(loginname,(err,user)=>{
+        if(err) return next(err)
+        if(!user) return ep.emit('login_err','用户名不存在')
+        tools.compareHash(password,user.pass,(err,equal)=>{
+            if(err) return next(err);
+            if(!equal){
+                ep.emit('login_err','密码错误')
+                return
+            }
+            authMiddleware.genSessionID(res);
+            res.status(200).json({msg:'登录成功'});
+            console.log(res)
+
+        })
+
+    })
 }
 exports.signout = function (req,res,next) {
-    res.end(" sign up ")
+
+    res.clearCookie(config.cookie_name,{path:'/'})
+    res.status(200).json({
+        msg: "您已登出"
+    })
 }
 
 exports.updatePassword = function (req,res,next) {

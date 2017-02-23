@@ -9,3 +9,11 @@ exports.createAndSave = (userObj,cb)=>{
     const user = new User(userObj)
     user.save(cb);
 }
+
+exports.getUserByMail = (email,cb)=>{
+    User.findOne({email:email},cb)
+}
+
+exports.getUserByName = (name,cb)=>{
+    User.findOne({username:name},cb)
+}
