@@ -22,8 +22,8 @@ router.post('/signin',auth.signin)
 router.post('/reset_pass',auth.updatePassword)
 router.get('/reset_pass',auth.resetPassword)
 
-router.get('./retrieve_pass',auth.showRetrievePass)
-router.post('./retrieve_pass',auth.retrievePass)
+router.get('/retrieve_pass',auth.showRetrievePass)
+router.post('/retrieve_pass',auth.retrievePass)
 
 
 module.exports = router;

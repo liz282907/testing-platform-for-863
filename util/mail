@@ -1,0 +1,32 @@
+const nodemailer = require('nodemailer')
+const config = require('../config')
+
+const transporter = nodemailer.createTransport({
+    service: '163',
+    auth: config.mail.auth
+});
+
+/**
+ * options:
+ */
+exports.sendEmail = (options,cb)=>{
+    transporter.sendMail(options,cb);
+}
+
+exports.getEmailSender = ()=>{
+    return "863 项目管理者 <"+ config.mail.user+ ">"
+}
+
+exports.sendResetEmail = (to,token,cb)=>{
+    const options = {
+        from: exports.getEmailSender(),
+        to: to,
+        subject: '重置密码',
+        html:   `<p>您好，我们收到您在 ${config.project_name} 上的找回密码的请求，请点击以下链接重置密码</p>
+                 <a href="${config.site_dir}/auth/reset_pass?token=${token}&email=${to} " ></a>
+  
+                 `
+    }
+    exports.sendEmail(options,cb);
+
+}

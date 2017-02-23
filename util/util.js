@@ -7,7 +7,11 @@ var EventProxy = require('eventproxy')
 var ep = new EventProxy()
 
 
-
+/**
+ * 用户注册校验
+ * @param {Object}req
+ * @returns {Object} 校验结果{valid:,[msg]}
+ */
 exports.validate = function(req) {
     var username = validator.trim(req.body.username)
     var email = validator.trim(req.body.email)
