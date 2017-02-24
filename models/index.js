@@ -9,8 +9,10 @@ mongoose.connect(config.db,function (err) {
     }
 
 })
+const db = mongoose.connection;
+db.on('error',(err)=>{console.error(err.stack)})
 
 require('./user')
-// require('./report')
+// require('./report')co
 
 exports.User = mongoose.model('User')

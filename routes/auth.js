@@ -20,7 +20,7 @@ router.post('/signin',auth.signin)
 
 //重置密码
 router.post('/reset_pass',auth.updatePassword)
-router.get('/reset_pass',auth.resetPassword)
+router.get('/reset_pass',auth.showResetPage)
 
 router.get('/retrieve_pass',auth.showRetrievePass)
 router.post('/retrieve_pass',auth.retrievePass)

@@ -6,11 +6,13 @@ var config = {
         service:'163',
         auth:{
             user:'mail_863_project@163.com',
-            pass: '123456a'
+            pass: '1qaz2wsx',
         }
     },
+    mail_login_pass: '123456a',
     project_name: '智能终端评测系统平台',
-    site_dir:'localhost:3000'
+    site_dir:'localhost:3000',
+
 }
 
 module.exports = config

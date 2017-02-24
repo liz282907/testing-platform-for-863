@@ -3,27 +3,7 @@
  */
 var express = require('express')
 
-var auth = require('../controllers/auth')
-
-var router = express.Router()
-
-//注册
-router.get('/signup',auth.showSignup)
-router.post('/signup',auth.signup)
-
-//登出
-router.post('/signout',auth.signout)
-
-//登录
-router.get('/signin',auth.showSignin)
-router.post('/signup',auth.signin)
-
-//重置密码
-router.post('/reset_pass',auth.updatePassword)
-router.get('/reset_pass',auth.resetPassword)
-
-router.get('./retrieve_pass',auth.showRetrievePass)
-router.post('./retrieve_pass',auth.retrievePass)
 
 
-module.exports = router;
+
+// module.exports = router;

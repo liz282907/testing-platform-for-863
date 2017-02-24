@@ -17,3 +17,8 @@ exports.getUserByMail = (email,cb)=>{
 exports.getUserByName = (name,cb)=>{
     User.findOne({username:name},cb)
 }
+
+exports.getUserByEmailAndToken = (obj)=>{
+    User.findOne(obj,cb)
+}
+// exports.updateUser()

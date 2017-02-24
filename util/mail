@@ -1,10 +1,8 @@
 const nodemailer = require('nodemailer')
 const config = require('../config')
 
-const transporter = nodemailer.createTransport({
-    service: '163',
-    auth: config.mail.auth
-});
+const transporter = nodemailer.createTransport(config.mail);
+
 
 /**
  * options:
@@ -14,19 +12,37 @@ exports.sendEmail = (options,cb)=>{
 }
 
 exports.getEmailSender = ()=>{
-    return "863 项目管理者 <"+ config.mail.user+ ">"
+    return config.mail.auth.user
 }
 
+/**
+ * 发送重置密码
+ * @param to 接收邮件的用户邮箱
+ * @param token 防止csrf的token值，存放在重置请求的链接中
+ * @param cb
+ */
 exports.sendResetEmail = (to,token,cb)=>{
+
+    const href = `${config.site_dir}/auth/reset_pass?token=${token}&email=${to}`
     const options = {
         from: exports.getEmailSender(),
         to: to,
         subject: '重置密码',
         html:   `<p>您好，我们收到您在 ${config.project_name} 上的找回密码的请求，请点击以下链接重置密码</p>
-                 <a href="${config.site_dir}/auth/reset_pass?token=${token}&email=${to} " ></a>
-  
+                 <a href=${href}>重置连接：${href}</a>
                  `
     }
-    exports.sendEmail(options,cb);
+
+    transporter.verify(function(error, success) {
+        if (error) {
+            console.log("verify transporter",error);
+        } else {
+            exports.sendEmail(options,cb);
+        }
+    });
+
+
+
+
 
 }
