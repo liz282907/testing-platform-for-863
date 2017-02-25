@@ -1,7 +1,11 @@
 var config = {
     db: 'mongodb://127.0.0.1/863',
-    signed_secret: '863_secret',
-    cookie_name: '863_express',
+    signed_secret: '863_secret',    //deprecated
+    cookie_name: '863_express',    //deprecated
+    session_related:{
+        name: '863_session',
+        secret: '863_secret'
+    },
     mail:{
         service:'163',
         auth:{

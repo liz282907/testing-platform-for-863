@@ -139,6 +139,7 @@ hello信息，ssl验证身份完以后 client随机生成一个大数，用serve
     - 补充： httpOnly是使得js不能访问带有该属性的cookie，同源策略是使得不能跨域访问
     
     
+    
    【碎碎念】：楼主装了editThisCookie的插件，里面有这么几个选项
     ![](http://p1.bqimg.com/567571/09169556d6276b44.jpg)
     
@@ -152,6 +153,43 @@ hello信息，ssl验证身份完以后 client随机生成一个大数，用serve
    > Persistent cookies - these remain on your hard drive until you erase them or they expire. How long a cookie remains on your browser depends on how long the visited website has programmed the cookie to last (more on persistent cookies).
     
     
+ 8. 前端所知道的"一次登录后，maxAge时间内就不需要验证"，到底做了什么？
+ 
+ 实际上是，登录后，server生成随机的sessionID信息放到cookie/signedCookie里面，（并）然后下次req的时候，会自动携带cookie信息，
+ 那么server对cookie里面的sessionID读取，并根据这个sessionID，去查与user的映射关系（就是存放session的地方，比如数据库），如果查找成功，则说明当前用户验证成功，
+ 然后在maxAge时间内都进行这个操作，
+ 
+ 所以说，不需要验证只是对前台不可见，实际上还是要做的。
+ 
+ （cnode的后台部分，就是把每一个请求的这一验证部分抽取成了authUser的中间件，先进行这一步操作，并挂在了req.session上，目的有二：
+     - 一是不要每次深层次查找数据，可以理解为一个快捷方式
+     - 另一方面其实是用了类似于[connect-mongo](https://github.com/jdesboeufs/connect-mongo/blob/master/src/index.js/#L193)的store中间件，用于sessionID与req.session的映射关系的存取，内部可以触发session存到store里面，监听maxAge等等，相当于用另外一张表来存取映射关系，而不是直接放在user表里面）
+     
+ 楼主后来又看了下[session库](https://sourcegraph.com/github.com/expressjs/session@master/-/blob/index.js#L95:29-95:33)，大致做了这么些操作，刚开始请求的时候，检查cookie信息，去设置req.sessionID,如果发现没有，则generate一个sessionID,req.session对象（Session类对象），进入next()，即后续
+ 的其他路由、中间件等，但是在里面其实还做了两件事件：
+ 
+ - 一个是onHeader函数，即，在要向浏览器发送数据包的时候，去[setCookie](https://github.com/expressjs/session/blob/master/index.js/#L242). 
+ - 另一件是包抄res.end函数，在里面多加了一个
+ [save到store](https://github.com/expressjs/session/blob/master/session/session.js/#L71)的过程，即以sessionID为key，把req.session对象写入数据库中。
+ 
+     ```javascript
+     //用上面提到的node-cookie-signature去签名，（hmac(sessionID,secret)） -> setCookie(name,signedCookie)
+        setcookie(res, name, req.sessionID, secrets[0], req.session.cookie.data);
+    ```
+ 
+ 以后每次请求都直接读取req.session即可。也就是说，简化了每次从req.cookie里面解析sessionID,然后查找之前建立的sessionid->user的映射表，以及后续的
+ 超时自动清除数据表等等其他收尾工作。维持一个"全局"对象（req.session）在一个登录有效期（多req）内持久存在的目的。
+ 
+ 而用了session的中间件，你所需要做的就是告诉它name，secret(用于签名)，即可（不告诉genid的函数都可以，内部它用uid去创建的），然后
+ 把要放到cookie里面的东西挂在req.session对象上...奏是这么简单...
+ 
+     
+ 9. save的options说明
+ 
+    - sessionresave : 是指每次请求都重新设置session cookie，假设你的cookie是10分钟过期，每次请求都会再设置10分钟
+    - Uninitialized: 是指无论有没有session cookie，每次请求都设置个session cookie ，默认给个标示为 connect.sid
+    secure: 应用在https
+ 
    ---
     
     

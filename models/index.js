@@ -1,5 +1,5 @@
-var mongoose = require('mongoose')
-var config = require('../config')
+const mongoose = require('mongoose')
+const config = require('../config')
 
 mongoose.connect(config.db,function (err) {
     if(err){
@@ -8,11 +8,13 @@ mongoose.connect(config.db,function (err) {
         process.exit(1);
     }
 
-})
+});
+
 const db = mongoose.connection;
-db.on('error',(err)=>{console.error(err.stack)})
+db.on('error',(err)=>{console.error(err.stack)});
 
 require('./user')
 // require('./report')co
 
 exports.User = mongoose.model('User')
+exports.connection = db

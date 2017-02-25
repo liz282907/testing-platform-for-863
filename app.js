@@ -4,6 +4,10 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var session = require('express-session')
+const MongoStore = require('connect-mongo')(session)
+const mongooseConnection = require('./models/index').connection
+const uuid = require('uuid/v1')
 
 var router = require('./routes/index');
 var users = require('./routes/users');
@@ -14,6 +18,14 @@ var app = express();
 // view engine setup
 // app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
+app.use(session({
+  secret: config.session_related.secret,
+  name: config.session_related.name,
+  genid: ()=> uuid(),
+  resave: false,
+  saveUninitialized: false,
+  store: new MongoStore({ mongooseConnection:  mongooseConnection}
+}))
 
 app.use('/',express.static(path.join(__dirname,'public')))
 app.get('/',function (req,res) {
@@ -32,6 +44,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/users', users);
 
 app.use('/',router);
+
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
