@@ -21,4 +21,8 @@ exports.getUserByName = (name,cb)=>{
 exports.getUserByEmailAndToken = (obj)=>{
     User.findOne(obj,cb)
 }
+exports.getUserById = (id,cb)=>{
+    if(!id) return cb();
+    User.findById(id,cb);
+}
 // exports.updateUser()

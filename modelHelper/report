@@ -1,0 +1,9 @@
+const Report = require('../models/index').Report
+
+exports.createAndSave = (fields,creator_id,cb)=>{
+
+    const temp = Object.assign({},fields);
+    temp['creator_id'] = creator_id;
+    const report = new Report(temp);
+    report.save(cb);
+}

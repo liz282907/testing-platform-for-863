@@ -66,11 +66,12 @@ exports.signup = function (req,res,next) {
             }
             User.createAndSave(user,(err)=>{
                 if(err) return next(err);
+                exports.signin(req,res,next);
             })
-            res.status(201).send({
-                msg: "创建成功"
-            })
-            exports.signin(req,res,next);
+            // res.status(201).send({
+            //     msg: "创建成功"
+            // })
+
         })
 
 
@@ -125,7 +126,7 @@ exports.signin = function (req,res,next) {
                 return
             }
             authMiddleware.genSessionID(res); //其实可以省略的，如果下面采取session中间件的话
-            req.session.user = uesr;
+            req.session.user = user;
             res.status(200).json({msg:'登录成功'});
 
         })
@@ -134,7 +135,7 @@ exports.signin = function (req,res,next) {
 }
 exports.signout = function (req,res,next) {
 
-    req.session.destroy(req.sessionID);
+    req.session.destroy(req.sessionID); //也可以不传参数，默认会用this.id===req.sessionID
     res.clearCookie(config.cookie_name,{path:'/'})
     res.status(200).json({
         msg: "您已登出"

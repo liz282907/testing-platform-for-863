@@ -26,6 +26,19 @@
         user.token = token
         user.save();    
 
+db.user.update({},{$rename:{"gender":"sex"}},false,true)
+/*
+  db.collection.update(criteria, objNew, upsert, multi )
+  criteria:update的查询条件，类似sql update查询内where后面的
+  objNew:update的对象和一些更新的操作符（如$,$inc...）等，也可以理解为sql update查询内set后面的。
+  upsert : 如果不存在update的记录，是否插入objNew,true为插入，默认是false，不插入。
+  multi : mongodb默认是false,只更新找到的第一条记录，如果这个参数为true,就把按条件查出来多条记录全部更新。
+
+*/
 ```
+嵌套子查询的两种方式的区别
+![](http://i1.piimg.com/567571/85bd5bdb3a26be3b.png)
+[subdocuments](https://docs.mongodb.com/v2.2/core/read-operations/#subdocuments)
+
     
     

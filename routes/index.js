@@ -10,6 +10,6 @@ var report = require('./report')
 // });
 
 router.use('/auth',auth);
-// router.use('/report',report)
+router.use('/report',report)
 
 module.exports = router;

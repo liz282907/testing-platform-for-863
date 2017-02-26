@@ -24,7 +24,7 @@ app.use(session({
   genid: ()=> uuid(),
   resave: false,
   saveUninitialized: false,
-  store: new MongoStore({ mongooseConnection:  mongooseConnection}
+  store: new MongoStore({ mongooseConnection:  mongooseConnection})
 }))
 
 app.use('/',express.static(path.join(__dirname,'public')))

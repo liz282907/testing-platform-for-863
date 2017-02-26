@@ -96,3 +96,10 @@ exports.moreThanOneDay = (from,to=Date.now())=>{
     const ONEDAY = 1000 * 60 * 60 *24
     return (from - to) > ONEDAY
 }
+
+
+exports.validateReport = (req,res,next)=>{
+    const {basic,items} = req.body;
+
+    if(!basic.taskName) return '任务名不能为空'
+}

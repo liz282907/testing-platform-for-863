@@ -26,3 +26,14 @@ exports.genSessionID = (res)=>{
 exports.genToken = ()=>{
     return uuid();
 }
+
+exports.userRequired = (req,res,next)=>{
+    if(req.session && req.session.user){
+        next()
+    }else{
+        return res.status(403).json({
+            error: '您没有权限操作，请登录'
+        })
+
+    }
+}
