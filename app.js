@@ -20,6 +20,7 @@ var app = express();
 app.set('view engine', 'jade');
 app.use(session({
   secret: config.session_related.secret,
+    cookie:{maxAge: config.session_related.maxAge},
   name: config.session_related.name,
   genid: ()=> uuid(),
   resave: false,

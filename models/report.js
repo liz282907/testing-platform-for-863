@@ -14,11 +14,11 @@ const ReportSchema = new mongoose.Schema({
     update_at:{type: Date,default:Date.now},
     create_at: {type: Date,default:Date.now},
     basic: {
-        taskName: String,
-        terminalType: String,
-        inspector: String,          //检查人
+        taskName: {type: String,default: '',required: true},
+        terminalType: {type: String,default: ''},
+        inspector: {type: String,default: ''},          //检查人
         inspect_at: {type: Date,default:Date.now},
-        remarks: String
+        remarks: {type: String,default: ''}
     },
     items: fields
 })

@@ -26,15 +26,19 @@ const dict = {
     ]
 }
 
-const mapAndMerge = (arr)=>{
-        return arr.reduce((dic,field)=>({type: Boolean,default: true}),{});
-}
+const mapAndMerge = (arr)=>(arr.reduce((dic,field)=>{
+    dic[field] = {type: Boolean,default: true};
+    return dic;
+},{}))
 
 exports.fields = Object.keys(dict).reduce((prev,category)=>{
         prev[category] = mapAndMerge(dict[category])
         return prev;
     },{})
+// console.log(exports.fields);
+
 exports.flattenFields = Object.keys(exports.fields).reduce((prev,field)=>{
     prev = Object.assign({},prev,exports.fields[field])
     return prev;
 },{})
+// console.log(mapAndMerge(dict.userData))

@@ -5,7 +5,8 @@ var config = {
     cookie_name: '863_express',    //deprecated
     session_related:{
         name: '863_session',
-        secret: '863_secret'
+        secret: '863_secret',
+        maxAge: 1000 * 60 * 60 * 24 * 30
     },
     mail:{
         service:'163',
