@@ -9,6 +9,7 @@ const UserSchema = new mongoose.Schema({
     token: String,
     retrieveTime: Number,
 
+    reports: [{type: mongoose.Schema.Types.ObjectId,ref:'Report'}],
     reportCount: {type: Number,default: 0}
 
 })

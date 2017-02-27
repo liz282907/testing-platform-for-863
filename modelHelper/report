@@ -7,3 +7,13 @@ exports.createAndSave = (fields,creator_id,cb)=>{
     const report = new Report(temp);
     report.save(cb);
 }
+
+exports.getReportTotalInfo = ()=>{
+
+}
+
+exports.getReportsByQuery = ({filter,options},cb)=>{
+    Report.find(filter)
+        .setOptions(options)
+        .exec(cb);
+}

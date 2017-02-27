@@ -19,6 +19,8 @@ var config = {
     project_name: '智能终端评测系统平台',
     site_dir:'localhost:3000',
 
+    pageSize: 20
+
 }
 
 module.exports = config

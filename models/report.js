@@ -10,7 +10,7 @@ const fields = require('../constants/tableFields').flattenFields
 
 const ReportSchema = new mongoose.Schema({
 
-    creator_id: {type: Schema.Types.ObjectId ,required: true},        //报告的创建者,
+    creator_id: {type: Schema.Types.ObjectId ,required: true,ref:'User'},        //报告的创建者,
     update_at:{type: Date,default:Date.now},
     create_at: {type: Date,default:Date.now},
     basic: {

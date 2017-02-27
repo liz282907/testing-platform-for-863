@@ -42,3 +42,13 @@ exports.flattenFields = Object.keys(exports.fields).reduce((prev,field)=>{
     return prev;
 },{})
 // console.log(mapAndMerge(dict.userData))
+
+exports.reportListColumns = {
+    'updateTime':'update_at',
+    'createTime': 'create_at',
+    'inspector': 'basic.inspector',
+    'inspectTime': 'basic.inspect_at',
+    'taskName': 'basic.taskName',
+    'terminalType': 'basic.terminalType',
+    'creator': 'basic.creator_id'
+}

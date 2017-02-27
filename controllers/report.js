@@ -6,9 +6,6 @@ const util = require('../util/index').util
 const Report = require('../modelHelper/index').Report
 const User = require('../modelHelper/index').User
 
-exports.createReport = (req,res,next)=>{
-
-}
 
 exports.showCreate = (req,res,next)=>{
     res.render('../public/index.html')
@@ -26,12 +23,12 @@ exports.createReport = (req,res,next)=>{
         })
     }
     const curUserId = req.session.user._id;
-    Report.createAndSave({basic,items},curUserId,(err)=>{
+    Report.createAndSave({basic,items},curUserId,(err,report)=>{
         if(err) return next(err);
 
         User.getUserById(curUserId,(err,user)=>{
 
-            user.reportCount++;
+            user.reports.push(report._id);
             user.save();
             req.session.user = user;
             res.status(201).send({
