@@ -136,7 +136,7 @@ exports.signin = function (req,res,next) {
 exports.signout = function (req,res,next) {
 
     req.session.destroy(req.sessionID); //也可以不传参数，默认会用this.id===req.sessionID
-    res.clearCookie(config.cookie_name,{path:'/'})
+    res.clearCookie(config.cookie_name,{path:'/'})     //deprecated
     res.status(200).json({
         msg: "您已登出"
     })

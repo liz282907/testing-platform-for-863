@@ -28,17 +28,17 @@ exports.createReport = (req,res,next)=>{
     const curUserId = req.session.user._id;
     Report.createAndSave({basic,items},curUserId,(err)=>{
         if(err) return next(err);
-        req.session.user.reportCount++;
-        // req.session.user.save();
-        User.getUserById(curUserId,(err,user)=>{
-            console.log("------in mongo ",user);
-            console.log("------in session ",req.session.user);
-            console.log("------比较 ",user===req.session.user);
 
+        User.getUserById(curUserId,(err,user)=>{
+
+            user.reportCount++;
+            user.save();
+            req.session.user = user;
+            res.status(201).send({
+                success: '报告创建成功'
+            })
         })
-        res.status(200).json({
-            success: '文件创建成功'
-        })
+
 
     })
 

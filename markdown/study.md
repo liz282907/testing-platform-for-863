@@ -157,7 +157,9 @@ hello信息，ssl验证身份完以后 client随机生成一个大数，用serve
  
  实际上是，登录后，server生成随机的sessionID信息放到cookie/signedCookie里面，（并）然后下次req的时候，会自动携带cookie信息，
  那么server对cookie里面的sessionID读取，并根据这个sessionID，去查与user的映射关系（就是存放session的地方，比如数据库），如果查找成功，则说明当前用户验证成功，
- 然后在maxAge时间内都进行这个操作，
+ 然后在maxAge时间内都进行这个操作。
+ 
+ ![](http://p1.bqimg.com/567571/c4c316bb332efa44.png)
  
  所以说，不需要验证只是对前台不可见，实际上还是要做的。
  
@@ -166,28 +168,48 @@ hello信息，ssl验证身份完以后 client随机生成一个大数，用serve
      - 另一方面其实是用了类似于[connect-mongo](https://github.com/jdesboeufs/connect-mongo/blob/master/src/index.js/#L193)的store中间件，用于sessionID与req.session的映射关系的存取，内部可以触发session存到store里面，监听maxAge等等，相当于用另外一张表来存取映射关系，而不是直接放在user表里面）
      
  楼主后来又看了下[session库](https://sourcegraph.com/github.com/expressjs/session@master/-/blob/index.js#L95:29-95:33)，大致做了这么些操作，刚开始请求的时候，检查cookie信息，去设置req.sessionID,如果发现没有，则generate一个sessionID,req.session对象（Session类对象），进入next()，即后续
- 的其他路由、中间件等，但是在里面其实还做了两件事件：
+ 的其他路由、中间件等，有session的话return。但是在session函数里面其实还做了两件事件：
  
  - 一个是onHeader函数，即，在要向浏览器发送数据包的时候，去[setCookie](https://github.com/expressjs/session/blob/master/index.js/#L242). 
+    
+    ```javascript
+      //用上面提到的node-cookie-signature去签名，（hmac(sessionID,secret)） -> setCookie(name,signedCookie)
+         setcookie(res, name, req.sessionID, secrets[0], req.session.cookie.data);
+     ```
+  
  - 另一件是包抄res.end函数，在里面多加了一个
  [save到store](https://github.com/expressjs/session/blob/master/session/session.js/#L71)的过程，即以sessionID为key，把req.session对象写入数据库中。
  
-     ```javascript
-     //用上面提到的node-cookie-signature去签名，（hmac(sessionID,secret)） -> setCookie(name,signedCookie)
-        setcookie(res, name, req.sessionID, secrets[0], req.session.cookie.data);
-    ```
+ **======更新===================**
+ 更确切的说是，检测shouldSave(req),然后再看是否要save到store中，shouldsave中判断了sessionID以及session前后的hash值，有变动则save
  
+     ```javascript
+    
+        // check if session has been modified
+        function isModified(sess) {
+          return originalId !== sess.id || originalHash !== hash(sess);
+        }
+    ```
+    
+    而要做到session与user的关联，是要手动触发的，（是不会去主动监听的...）即当创建一个report时，要设置user.reportCount++（save到数据库）时，希望req.session.user里面也相应的更新的话，就要手动
+    去改变，在上面的shouldsave里面我们可以看到，可以直接操作req.session.user.replyCount，也可以将刚刚改变的user对象重新付给req.session，引用及数据变化，hash出来的自然不一样。就会在res.end中去
+    更新session了。
+    
+ **======更新===================**
+     
  以后每次请求都直接读取req.session即可。也就是说，简化了每次从req.cookie里面解析sessionID,然后查找之前建立的sessionid->user的映射表，以及后续的
  超时自动清除数据表等等其他收尾工作。维持一个"全局"对象（req.session）在一个登录有效期（多req）内持久存在的目的。
  
- 而用了session的中间件，你所需要做的就是告诉它name，secret(用于签名)，即可（不告诉genid的函数都可以，内部它用uid去创建的），然后
+ 而用了session的中间件，你所需要做的就是告诉它name，secret(用于签名,required)，即可（不告诉genid的函数都可以，内部它用uid去创建的），然后
  把要放到cookie里面的东西挂在req.session对象上...奏是这么简单...
  
      
- 9. save的options说明
+ 9. session.save的options说明
  
     - sessionresave : 是指每次请求都重新设置session cookie，假设你的cookie是10分钟过期，每次请求都会再设置10分钟
-    - Uninitialized: 是指无论有没有session cookie，每次请求都设置个session cookie ，默认给个标示为 connect.sid
+    - Uninitialized: 是指无论有没有session cookie，每次请求都自动设置个session cookie ，默认给个标示为 connect.sid。一般建议用false，使得有权限才可以
+    setcookie，同时也减轻server的压力。
+    
     secure: 应用在https
  
    ---
