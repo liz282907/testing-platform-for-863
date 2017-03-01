@@ -6,7 +6,7 @@ method: "get"
 params:{
     pageSize:50,
     pageIndex:1,
-    orderBy: "updateTime" |"inspectTime",   //选项：按频率|按时间
+    orderBy: "updateTime" |"inspectTime",   
     desc: true,
     [filter:'']           //可选项,默认搜索报告名         
 }

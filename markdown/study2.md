@@ -89,8 +89,48 @@ db.user.update({},{$rename:{"gender":"sex"}},false,true)
 */
 ```
 
-5. 分页查找
+5. 分页+关联查找
 
+```javascript
+//controllers/reports.js
+exports.list = (req,res,next)=>{
+
+    let {
+        pageSize = config.pageSize,
+        pageIndex = 1,
+        orderBy = reportListColumns.createTime,
+        desc = true,
+        filter = ''
+    } = req.query;
+
+    desc = desc? -1 : 1;
+    filter = filter? {'basic.taskName': filter}: {}
+
+    const query = {
+        filter,
+        options: {
+            sort: {[orderBy]: desc},
+            limit: pageSize,
+            skip: pageSize * (pageIndex - 1)
+        }
+    }
+    //获取报告列表，同时将creatorid替换为创建人的username
+    Report.getReportsByQuery(query,(err,reports)=>{
+        if(err) return next(err);
+        res.status(200).json(util.normailizeReport(reports));
+    })
+}
+//modelHelper/report
+
+exports.getReportsByQuery = ({filter,options},cb)=>{
+    Report.find(filter)
+        .populate('creator_id','username')
+        .setOptions(options)
+        .exec(cb);
+}
+
+
+```
 
 嵌套子查询的两种方式的区别
 ![](http://i1.piimg.com/567571/85bd5bdb3a26be3b.png)

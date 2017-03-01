@@ -12,9 +12,16 @@ exports.getReportTotalInfo = ()=>{
 
 }
 
-exports.getReportsByQuery = ({filter,options},cb)=>{
+exports.getReportsByQuery = ({filter={},options={}},cb)=>{
     Report.find(filter)
         .populate('creator_id','username')
         .setOptions(options)
         .exec(cb);
 }
+
+exports.getReportByName = (name,cb)=>{
+    Report.findOne({'basic.taskName':name})
+        .populate('creator_id','username')
+        .exec(cb);
+}
+

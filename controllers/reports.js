@@ -32,8 +32,19 @@ exports.list = (req,res,next)=>{
     //获取报告列表，同时将creatorid替换为创建人的username
     Report.getReportsByQuery(query,(err,reports)=>{
         if(err) return next(err);
-        res.status(200).json(util.normailizeReport(reports));
+        res.status(200).json(util.normalizeReport(reports));
     })
 
 
 }
+
+// exports.download = (req,res,next)=>{
+//
+//     const taskName = req.params.name;
+//     Report.getReportsByQuery({filter: {taskName}},(err,report)=>{
+//         if(err) return next(err);
+//
+//         console.log(util.formToMarkdown(report.items));
+//     })
+//
+// }

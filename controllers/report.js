@@ -5,6 +5,7 @@ const ep = require('eventproxy')
 const util = require('../util/index').util
 const Report = require('../modelHelper/index').Report
 const User = require('../modelHelper/index').User
+const fs = require('fs')
 
 
 exports.showCreate = (req,res,next)=>{
@@ -40,4 +41,22 @@ exports.createReport = (req,res,next)=>{
     })
 
 
+}
+
+exports.download = (req,res,next)=> {
+
+    const taskName = req.params.name;
+    Report.getReportByName(taskName, (err, report) => {
+        if (err) return next(err);
+
+        const result = util.formToMarkdown(report.items);
+        fs.writeFile('testmd.md',result,(err)=>{
+            if(err) return next(err);
+        })
+
+        console.log(util.formToMarkdown(report.items));
+        res.status(200).json({
+            success:'downloading'
+        })
+    })
 }

@@ -9,6 +9,7 @@ const report = require('../controllers/report')
 router.get('/create',auth.userRequired,report.showCreate)
 router.post('/create',auth.userRequired,report.createReport)
 
+router.post('/:name/download',auth.userRequired,report.download)
 
 
 

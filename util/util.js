@@ -5,6 +5,7 @@
 var validator = require('validator')
 var EventProxy = require('eventproxy')
 var ep = new EventProxy()
+const tableFields = require('../constants/tableFields')
 
 
 const validateStrategy = {
@@ -104,7 +105,7 @@ exports.validateReport = (req,res,next)=>{
     if(!basic.taskName) return '任务名不能为空'
 }
 
-exports.normailizeReport = (report)=>{
+exports.normalizeReport = (report)=>{
 
     let reportList = report;
 
@@ -121,4 +122,8 @@ exports.normailizeReport = (report)=>{
         }
     })
 
+}
+
+exports.formToMarkdown = (formData)=>{
+    return tableFields.generateMarkdown(formData);
 }
