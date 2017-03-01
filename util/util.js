@@ -88,7 +88,7 @@ exports.validate = function(req) {
 
 
 /**
- *
+ * 用于电子邮件的token时间有效期的验证，from,to均为 Date.now()所指示的milliseconds
  * @param {Number} from
  * @constructor
  */
@@ -102,4 +102,23 @@ exports.validateReport = (req,res,next)=>{
     const {basic,items} = req.body;
 
     if(!basic.taskName) return '任务名不能为空'
+}
+
+exports.normailizeReport = (report)=>{
+
+    let reportList = report;
+
+    if(!Array.isArray(report)){
+        reportList = [report]
+    }
+    if(!reportList.length) return [];
+    return reportList.map(report=>{
+        const {items,basic,creator_id} = report
+        return {
+            items,
+            basic,
+            creator: creator_id.username
+        }
+    })
+
 }

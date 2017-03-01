@@ -8,6 +8,28 @@ params:{
     pageIndex:1,
     orderBy: "updateTime" |"inspectTime",   //选项：按频率|按时间
     desc: true,
-    [filter:""]           //可选项         
+    [filter:'']           //可选项,默认搜索报告名         
 }
+
+
+response:
+[
+  {
+    "items": {
+      "phoneCall": true,
+      "threePhone": true,
+      ...
+    },
+    "basic": {
+      "taskName": "testReport",
+      "terminalType": "",
+      ...
+    },
+    "creator": "luchen"
+  },
+  ...
+]
+
+
+
 ```
