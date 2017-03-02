@@ -53,23 +53,42 @@ exports.createReport = (req,res,next)=>{
     })
 }
 
-exports.download = (req,res,next)=> {
-    const taskName = req.params.name;
+exports.generateMarkdown = (taskName,next,cb)=>{
+
     Report.getReportByName(taskName, (err, report) => {
         if (err) return next(err);
         const filePath = path.join(config.fileDir.dest,taskName+'.pdf')
-        util.searchFile(filePath,next,(err,realFilePath)=>{
-            if(err) return next(err);
-            res.download(realFilePath,taskName,(err)=>{
-                if (err) {
-                    return next(err);
-                } else {
-                    console.log("success")
-                    res.status(200).json({
-                        success:'downloading'
-                    })
-                }
-            })
+        const template = util.formToMarkdown(report.items);
+        fs.writeFile(filePath,template,(err)=>{
+            if(!err) return next(err);
+            cb(filePath);
+        });
+    })
+
+
+}
+
+exports.download = (req,res,next)=> {
+    const taskName = req.params.name;
+
+    const filePath = path.join(config.fileDir.dest,taskName+'.pdf');
+    util.searchFile(filePath,next,(err,realFilePath)=>{
+        if(err) return next(err);
+        if(realFilePath) ep.emit('fileReady',realFilePath);
+        else{
+            exports.generateMarkdown(taskName,next,ep.done('fileReady'));
+        }
+    })
+    ep.on('fileReady',(realFilePath)=>{
+        res.download(realFilePath,taskName,(err)=>{
+            if (err) {
+                return next(err);
+            } else {
+                console.log("success")
+                res.status(200).json({
+                    success:'downloading'
+                })
+            }
         })
     })
 }

@@ -140,6 +140,7 @@ exports.searchFile = (prevPath,cb)=>{
     const fileName = path.basename(prevPath,path.extname(prevPath));
 
     ep.on('findFile',(filePath)=>{
+        if(!filePath) return cb(null,'');
         if(path.extname(filePath) ==='.pdf') return cb(null,filePath);
 
         //同名文件，尚未转为pdf
@@ -147,10 +148,6 @@ exports.searchFile = (prevPath,cb)=>{
             console.log("文件创建成功，Done")
             ep.emit('findFile',config.fileDir.dest,fileName+'.pdf');
         })
-
-        // fs.createReadStream(filePath)
-        //     .pipe(markdownpdf())
-        //     .pipe(fs.createWriteStream(path.join(config.fileDir.dest,fileName+'.pdf')))
     })
     ep.on('retrySearch',(path)=>{
         Object.keys(config.fileDir).forEach((dirName)=>{
@@ -161,6 +158,8 @@ exports.searchFile = (prevPath,cb)=>{
                         return
                     }
                 });
+                ep.emit('findFile','');
+                return;
             }));
         })
 
@@ -169,7 +168,7 @@ exports.searchFile = (prevPath,cb)=>{
     ep.fail(cb);
 
     fs.access(prevPath, fs.constants.R_OK | fs.constants.W_OK, (err) => {
-        if(err) return ep.done('retrySearch');
-        ep.emit('findFile',prevPath);
+        if(err) ep.emit('retrySearch');
+        else ep.emit('findFile',prevPath);
     });
 }
