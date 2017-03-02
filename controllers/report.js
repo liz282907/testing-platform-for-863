@@ -1,13 +1,14 @@
 /**
  * Created by luchen on 2017/2/21.
  */
-const ep = require('eventproxy')
+const EventProxy = require('eventproxy')
 const util = require('../util/index').util
 const Report = require('../modelHelper/index').Report
 const User = require('../modelHelper/index').User
 const fs = require('fs')
 const path = require('path')
 const config = require('../config')
+const ep = new EventProxy()
 // const markdownpdf = require("markdown-pdf")
 
 

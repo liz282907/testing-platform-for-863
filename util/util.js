@@ -5,7 +5,7 @@
 var validator = require('validator')
 var EventProxy = require('eventproxy')
 var config = require('../config.js')
-var ep = new EventProxy()
+const ep = new EventProxy()
 var fs = require('fs')
 const path = require('path')
 const markdownpdf = require("markdown-pdf")
@@ -149,7 +149,7 @@ exports.searchFile = (prevPath,cb)=>{
             ep.emit('findFile',config.fileDir.dest,fileName+'.pdf');
         })
     })
-    ep.on('retrySearch',(path)=>{
+    ep.on('retrySearch',()=>{
         Object.keys(config.fileDir).forEach((dirName)=>{
             fs.readdir(dirName,ep.done(files=>{
                 files.forEach(filename=> {
