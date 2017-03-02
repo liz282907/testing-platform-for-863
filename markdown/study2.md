@@ -6,21 +6,21 @@
 应该找到授权码
 ![](http://p1.bqimg.com/567571/3d57d97e8d768bd0.png)
 
-2. 找回密码与重置密码
+#### 2. 找回密码与重置密码
 
-    - 找回密码是 username/email(数据库中存在该人) + token(发送请求的是本人)。
+- 找回密码是 username/email(数据库中存在该人) + token(发送请求的是本人)。
 
-        楼主试了下qq的找回密码是 邮箱/或者其他能唯一验证的信息 + 验证码（csrf的防范中我们也提到过这个方法）+ 密保手机（双重防范）
+    楼主试了下qq的找回密码是 邮箱/或者其他能唯一验证的信息 + 验证码（csrf的防范中我们也提到过这个方法）+ 密保手机（双重防范）
 
-        经过上面的步骤后就可以验证是本人的请求，就可以真正 reset pass + 新密码了。
+    经过上面的步骤后就可以验证是本人的请求，就可以真正 reset pass + 新密码了。
+
+    对于邮箱来说，就是处理reset_pass这个action + 新密码
+
+- 重置密码则是输入自己的原有信息（username+pass身份验证）+ 新密码。
+
+本质上差不多
     
-        对于邮箱来说，就是处理reset_pass这个action + 新密码
-    
-    - 重置密码则是输入自己的原有信息（username+pass身份验证）+ 新密码。
-    
-    本质上差不多
-    
-3. 数据库操作
+#### 3. 数据库操作
 
 - find
 
@@ -56,7 +56,7 @@ db.unicorns.find({vampires: {$gt: 50}}).count()
 
 ```
 
-4. 连接知识
+#### 4. 连接知识
 
 - 内连接（两张表中都有的数据才会显示）
     - 相等链接
@@ -89,7 +89,7 @@ db.user.update({},{$rename:{"gender":"sex"}},false,true)
 */
 ```
 
-5. 分页+关联查找
+#### 5. 分页+关联查找
 
 ```javascript
 //controllers/reports.js
@@ -131,6 +131,121 @@ exports.getReportsByQuery = ({filter,options},cb)=>{
 
 
 ```
+
+#### 6. 嵌套结构的生成，以及递归写入markdown
+
+刷了那么多算法题...感觉第一次在项目中用到了= =..
+
+>需求就是，前台提交时的报表数据是层次结构的最后一层数据（后台也是这么存的），但是有个下载链接，要把这些数据还原成层次生成pdf。
+
+##### 已知：
+
+后端数据：![后端数据](http://i1.piimg.com/567571/52464e90f5a8513a.png)
+后端field对应的常量层级表：![后端field对应层级表](http://i1.piimg.com/567571/35f5eabb485709e4.png)
+flatten格式的现有数据（constants.seq2Name）：![flatten格式的现有数据](http://i1.piimg.com/567571/e00d150dd57b1e8f.png)
+
+##### 目标
+![](http://i1.piimg.com/567571/cddc4d41e0d5a9bc.png)
+
+##### 实现
+step1: 根据现有数据，及常量对应表，还原成层次结构。
+
+主要用递归处理。
+![](http://p1.bqimg.com/567571/1e891dc47eb24999.png)
+
+```javascript
+/**
+ * 根据上面的信息（constants.seq2Name）转成nested数组
+ * @param arr
+ * @param parentPath   '4.3.2'的parentPath就是4.3，然后
+ * @param used
+ * @returns {Array}
+ */
+const getNestedChildren = (arr, parentPath, used) => {
+
+    const temp = [];
+    for (var i = 0; i < arr.length; i++) {
+        const item = arr[i];
+        if (used[item.path]) continue;     //剪枝
+
+        const prefix = getParentPath(item); 
+        if (prefix === parentPath) {
+            const children = getNestedChildren(arr, item.path, used);
+            item.children = children;
+            temp.push(item);
+            used[item.path] = true;
+        }
+    }
+    return temp;
+}
+
+```
+step2:
+嵌套数组递归输出生成markdown字符串
+
+```javascript
+/**
+ *
+ * @param arr        嵌套数组
+ * @param result     当前path上的字符串，
+ * @param formData   接收的前台数据，也就是存在数据库里面的内容
+ * @param template   最终输出到md文件的模板字符串
+ * @param isFirstLeaf   当前节点是否是叶子节点中的第一个，因为之前的回溯会把path上的所有节点给输出，而同一级叶子节点实际上父元素只需要输出一次
+ * 因此要做输出处理
+ */
+const arr2Markdown = (arr, result, formData, template, isFirstLeaf) => {
+    if (!arr.length) {
+        if (isFirstLeaf) template.push(result.join(''));
+        else {
+            template.push(result.slice(-1).join(''));
+        }
+        result = [];
+        return
+    }
+    for (let i = 0; i < arr.length; i++) {
+        const item = arr[i];
+        if (i === 0) item.isFirst = true;
+
+        const len = item.path.split('.').length
+        const prefix = new Array(len).fill('#').join('')         //### 移动终端
+        let curLine;
+
+        //叶子节点,同时输出名字+结果值
+        const value = getReportValueBySeq(item.path, formData);
+
+        if (!item.children.length && value) {
+            curLine = [item.path, item.name, '：', value, '\n'].join('');
+            isFirstLeaf = i === 0;
+        } else {
+            curLine = [prefix, ' ', item.path, item.name, '\n'].join('');
+        }
+
+        result.push(curLine);
+        arr2Markdown(item.children, result, formData, template, isFirstLeaf);
+        result.pop();
+    }
+}
+
+```
+step3: 最终的调用示例
+
+```javascript
+exports.generateMarkdown = (formData) => {
+    const nestedArr = getNestedChildren(arr, '4', {});
+    fs.writeFile('nested.js', JSON.stringify(nestedArr), (err) => {
+        if (err) return next(err);
+    })
+    let template = [];
+    arr2Markdown(nestedArr, [], formData, template, false);
+
+    return template.join('');
+}
+
+```
+
+
+
+一堆平级放置的数组（其实内部是有层级关系的），需要转化为层次结构的
 
 嵌套子查询的两种方式的区别
 ![](http://i1.piimg.com/567571/85bd5bdb3a26be3b.png)

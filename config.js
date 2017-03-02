@@ -19,7 +19,12 @@ var config = {
     project_name: '智能终端评测系统平台',
     site_dir:'localhost:3000',
 
-    pageSize: 20
+    pageSize: 20,
+
+    fileDir:{
+        src:'files/src',
+        dest: '/files/dest'
+    }
 
 }
 

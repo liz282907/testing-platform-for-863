@@ -4,7 +4,11 @@
 
 var validator = require('validator')
 var EventProxy = require('eventproxy')
+var config = require('../config.js')
 var ep = new EventProxy()
+var fs = require('fs')
+const path = require('path')
+const markdownpdf = require("markdown-pdf")
 const tableFields = require('../constants/tableFields')
 
 
@@ -126,4 +130,46 @@ exports.normalizeReport = (report)=>{
 
 exports.formToMarkdown = (formData)=>{
     return tableFields.generateMarkdown(formData);
+}
+
+/**
+ * 就是给定文件路径，access查看是否存在，不在的话，去各个目录下找同名文件（不包括后缀，），
+ * 如果找到的话，触发findFile事件，如果发现后缀也一样，则返回path,不一样，则去转成pdf，然后返回pathname.
+ */
+exports.searchFile = (prevPath,cb)=>{
+    const fileName = path.basename(prevPath,path.extname(prevPath));
+
+    ep.on('findFile',(filePath)=>{
+        if(path.extname(filePath) ==='.pdf') return cb(null,filePath);
+
+        //同名文件，尚未转为pdf
+        markdownpdf().from(filePath).to(path.join(config.fileDir.dest,fileName+'.pdf'), function () {
+            console.log("文件创建成功，Done")
+            ep.emit('findFile',config.fileDir.dest,fileName+'.pdf');
+        })
+
+        // fs.createReadStream(filePath)
+        //     .pipe(markdownpdf())
+        //     .pipe(fs.createWriteStream(path.join(config.fileDir.dest,fileName+'.pdf')))
+    })
+    ep.on('retrySearch',(path)=>{
+        Object.keys(config.fileDir).forEach((dirName)=>{
+            fs.readdir(dirName,ep.done(files=>{
+                files.forEach(filename=> {
+                    if(filename.indexOf(fileName)!==-1){
+                        ep.done('findFile',path.join(dirName,filename));
+                        return
+                    }
+                });
+            }));
+        })
+
+    })
+
+    ep.fail(cb);
+
+    fs.access(prevPath, fs.constants.R_OK | fs.constants.W_OK, (err) => {
+        if(err) return ep.done('retrySearch');
+        ep.emit('findFile',prevPath);
+    });
 }

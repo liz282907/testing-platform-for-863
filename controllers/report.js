@@ -6,6 +6,9 @@ const util = require('../util/index').util
 const Report = require('../modelHelper/index').Report
 const User = require('../modelHelper/index').User
 const fs = require('fs')
+const path = require('path')
+const config = require('../config')
+// const markdownpdf = require("markdown-pdf")
 
 
 exports.showCreate = (req,res,next)=>{
@@ -35,28 +38,38 @@ exports.createReport = (req,res,next)=>{
             res.status(201).send({
                 success: '报告创建成功'
             })
-        })
 
+        })
+        const result = util.formToMarkdown(report.items);
+        fs.writeFile(`${fileName}.md`,result,(err)=>{
+            if(err) return next(err);
+            console.log("写入文件成功")
+            fs.createReadStream(path.join(config.fileDir.src,fileName+'.md'))
+                .pipe(markdownpdf())
+                .pipe(fs.createWriteStream(path.join(config.fileDir.dest,fileName+'.pdf')))
+        })
+        // const fileName = report.basic.taskName;
 
     })
-
-
 }
 
 exports.download = (req,res,next)=> {
-
     const taskName = req.params.name;
     Report.getReportByName(taskName, (err, report) => {
         if (err) return next(err);
-
-        const result = util.formToMarkdown(report.items);
-        fs.writeFile('testmd.md',result,(err)=>{
+        const filePath = path.join(config.fileDir.dest,taskName+'.pdf')
+        util.searchFile(filePath,next,(err,realFilePath)=>{
             if(err) return next(err);
-        })
-
-        console.log(util.formToMarkdown(report.items));
-        res.status(200).json({
-            success:'downloading'
+            res.download(realFilePath,taskName,(err)=>{
+                if (err) {
+                    return next(err);
+                } else {
+                    console.log("success")
+                    res.status(200).json({
+                        success:'downloading'
+                    })
+                }
+            })
         })
     })
 }
