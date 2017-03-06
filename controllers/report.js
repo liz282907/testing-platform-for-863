@@ -81,6 +81,7 @@ exports.download = (req,res,next)=> {
         }
     })
     ep.on('fileReady',(realFilePath)=>{
+        ep.unbind('fileReady')
         res.download(realFilePath,taskName,(err)=>{
             if (err) {
                 return next(err);
