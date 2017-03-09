@@ -4,6 +4,7 @@
 
 var validator = require('validator')
 var EventProxy = require('eventproxy')
+const moment = require('moment')
 var config = require('../config.js')
 const ep = new EventProxy()
 var fs = require('fs')
@@ -109,6 +110,15 @@ exports.validateReport = (req,res,next)=>{
     if(!basic.taskName) return '任务名不能为空'
 }
 
+const normalizeDate = (obj)=>{
+    Object.keys(obj).forEach(field=>{
+        if(field.indexOf('_at')!==-1 && basic[field]) basic[field] = moment(basic[field],'YYYY-MM-DD')
+    })
+}
+
+exports.isDate = (obj)=> obj && obj.constructor.toString().indexOf('Date')!==-1
+
+
 exports.normalizeReport = (report)=>{
 
     let reportList = report;
@@ -119,17 +129,27 @@ exports.normalizeReport = (report)=>{
     if(!reportList.length) return [];
     const list = reportList.map(report=>{
         const {items,basic,creator_id} = report
+
+        //时间格式修改，不能直接更改basic[field]
+        const transformedBasic = Object.keys(basic).reduce((prev,field)=>{
+            if(exports.isDate(basic[field])) {
+                prev[field] = moment(basic[field]).format('YYYY-MM-DD');
+            }
+            else prev[field] = basic[field];
+            return prev
+        },{})
+        // Object.keys(basic).forEach(field=>{
+        //     if(exports.isDate(basic[field])) basic[field] = moment(basic[field]).format('YYYY-MM-DD').toString()
+        //     if(exports.isDate(basic[field])) console.log(basic[field],moment(basic[field]).format('YYYY-MM-DD').toString())
+        // })
         return {
             items,
-            basic,
+            basic: transformedBasic,
             creator: creator_id.username
         }
     })
     return {
-        data: {
-            total: list.length,
-            list
-        }
+        list
     }
 
 }

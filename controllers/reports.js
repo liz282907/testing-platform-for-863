@@ -15,15 +15,13 @@ const normalizeQuery = (query)=>{
         pageIndex = 1,
         orderBy = reportListColumns.inspectTime,
         desc = true,
-        filter = {filterBy: 'basic.taskName',filterValue:''}
     } = query;
 
+    let filter = {}
+    if(query.taskName) filter["basic.taskName"] = query.taskName;
+    if(query.inspector) filter["basic.inspector"] = query.inspector;
+
     desc = desc? -1 : 1;
-
-    if(filter.filterBy.indexOf('basic')===-1) filter.filterBy = 'basic'+ filter.filterBy;
-
-    if(!filter.filterValue) filter = {}
-    else filter =  {[filter.filterBy]: filter.filterValue}
 
     pageSize = parseInt(pageSize);
     pageIndex = parseInt(pageIndex)
@@ -48,13 +46,11 @@ exports.list = (req,res,next)=>{
     const totalCountPromise = Report.getReportsByQuery();
     Promise.all([reportListPromise,totalCountPromise]).spread((reports,count)=>{
         const normalizedReport = util.normalizeReport(reports);
-        const sendData = Object.assign(
-            {},
-            normalizedReport,
-            {
-                total:count,
-                status:200
-            });
+        const data = Object.assign({},normalizedReport,{total: count.length});
+        const sendData = {
+            data,
+            status: 200
+        }
         res.status(200).json(sendData);
     }).catch(err=>{
         if(err) next(err);

@@ -13,6 +13,8 @@ exports.getReportTotalInfo = ({filter={}})=>{
     return new Promise((resolve,reject)=>{
         Report.find(filter,(err,reports)=>{
             if(err) return reject(err);
+            console.log(reports);
+            console.log(reports.length)
             resolve(reports.length);
         })
     })
