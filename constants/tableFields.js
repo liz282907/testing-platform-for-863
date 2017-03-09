@@ -29,7 +29,7 @@ const dict = {
 }
 
 const mapAndMerge = (arr) => (arr.reduce((dic, field) => {
-    dic[field] = {type: Boolean, default: true};
+    dic[field] = {type: Boolean, default: 1};
     return dic;
 }, {}))
 
@@ -269,7 +269,7 @@ const seq2Name = (function () {
     }, {});
     return (seq) => dict[seq];
 })()
-const getReportValueBySeq = (seq, formData) => formData[seq2Name(seq)]
+const getReportValueBySeq = (seq, formData) => parseInt(formData[seq2Name(seq)])
 
 /**
  *
@@ -319,9 +319,9 @@ const arr2Markdown = (arr, result, formData, template, isFirstLeaf) => {
 
 exports.generateMarkdown = (formData) => {
     const nestedArr = getNestedChildren(arr, '4', {});
-    fs.writeFile('nested.js', JSON.stringify(nestedArr), (err) => {
-        if (err) return next(err);
-    })
+    // fs.writeFile('nested.js', JSON.stringify(nestedArr), (err) => {
+    //     if (err) return next(err);
+    // })
 
     let template = [];
     arr2Markdown(nestedArr, [], formData, template, false);

@@ -9,7 +9,7 @@ const fs = require('fs')
 const path = require('path')
 const config = require('../config')
 const ep = new EventProxy()
-// const markdownpdf = require("markdown-pdf")
+const markdownpdf = require("markdown-pdf")
 
 
 exports.showCreate = (req,res,next)=>{
@@ -22,6 +22,7 @@ exports.createReport = (req,res,next)=>{
     const error = util.validateReport(req);
     if(error){
         return res.status(422).send({
+            status: 422,
             error,
             basic,
             items
@@ -37,19 +38,24 @@ exports.createReport = (req,res,next)=>{
             user.save();
             req.session.user = user;
             res.status(201).send({
-                success: '报告创建成功'
+                status: 201,
+                msg: '报告创建成功',
+                data:''
             })
 
         })
+        const fileName = report.basic.taskName;
         const result = util.formToMarkdown(report.items);
-        fs.writeFile(`${fileName}.md`,result,(err)=>{
+        const srcFilePath = path.join(config.fileDir.src,`${fileName}.md`);
+        const destFilePath = path.join(config.fileDir.dest,`${fileName}.pdf`);
+        fs.writeFile(srcFilePath,result,(err)=>{
             if(err) return next(err);
             console.log("写入文件成功")
             fs.createReadStream(path.join(config.fileDir.src,fileName+'.md'))
                 .pipe(markdownpdf())
-                .pipe(fs.createWriteStream(path.join(config.fileDir.dest,fileName+'.pdf')))
+                .pipe(fs.createWriteStream(destFilePath))
         })
-        // const fileName = report.basic.taskName;
+
 
     })
 }
@@ -88,6 +94,7 @@ exports.download = (req,res,next)=> {
             } else {
                 console.log("success")
                 res.status(200).json({
+                    status: 201,
                     success:'downloading'
                 })
             }

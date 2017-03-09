@@ -1,27 +1,34 @@
 /**
  * Created by luchen on 2017/2/27.
  */
-
+const Promise = require('bluebird')
 const Report = require('../modelHelper/index').Report
 const  reportListColumns = require('../constants/tableFields').reportListColumns
 const util = require('../util/index').util
 
 const config = require('../config')
 
-exports.list = (req,res,next)=>{
 
+const normalizeQuery = (query)=>{
     let {
         pageSize = config.pageSize,
         pageIndex = 1,
-        orderBy = reportListColumns.createTime,
+        orderBy = reportListColumns.inspectTime,
         desc = true,
-        filter = ''
-    } = req.query;
+        filter = {filterBy: 'basic.taskName',filterValue:''}
+    } = query;
 
     desc = desc? -1 : 1;
-    filter = filter? {'basic.taskName': filter}: {}
 
-    const query = {
+    if(filter.filterBy.indexOf('basic')===-1) filter.filterBy = 'basic'+ filter.filterBy;
+
+    if(!filter.filterValue) filter = {}
+    else filter =  {[filter.filterBy]: filter.filterValue}
+
+    pageSize = parseInt(pageSize);
+    pageIndex = parseInt(pageIndex)
+
+    const normalizedQuery = {
         filter,
         options: {
             sort: {[orderBy]: desc},
@@ -29,13 +36,29 @@ exports.list = (req,res,next)=>{
             skip: pageSize * (pageIndex - 1)
         }
     }
+    return normalizedQuery;
+}
+exports.list = (req,res,next)=>{
+
+    const query = normalizeQuery(req.query);
+
+
     //获取报告列表，同时将creatorid替换为创建人的username
-    Report.getReportsByQuery(query,(err,reports)=>{
-        if(err) return next(err);
-        res.status(200).json(util.normalizeReport(reports));
+    const reportListPromise = Report.getReportsByQuery(query);
+    const totalCountPromise = Report.getReportsByQuery();
+    Promise.all([reportListPromise,totalCountPromise]).spread((reports,count)=>{
+        const normalizedReport = util.normalizeReport(reports);
+        const sendData = Object.assign(
+            {},
+            normalizedReport,
+            {
+                total:count,
+                status:200
+            });
+        res.status(200).json(sendData);
+    }).catch(err=>{
+        if(err) next(err);
     })
-
-
 }
 
 // exports.download = (req,res,next)=>{

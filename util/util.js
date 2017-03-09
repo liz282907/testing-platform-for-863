@@ -8,7 +8,7 @@ var config = require('../config.js')
 const ep = new EventProxy()
 var fs = require('fs')
 const path = require('path')
-const markdownpdf = require("markdown-pdf")
+
 const tableFields = require('../constants/tableFields')
 
 
@@ -117,7 +117,7 @@ exports.normalizeReport = (report)=>{
         reportList = [report]
     }
     if(!reportList.length) return [];
-    return reportList.map(report=>{
+    const list = reportList.map(report=>{
         const {items,basic,creator_id} = report
         return {
             items,
@@ -125,6 +125,12 @@ exports.normalizeReport = (report)=>{
             creator: creator_id.username
         }
     })
+    return {
+        data: {
+            total: list.length,
+            list
+        }
+    }
 
 }
 

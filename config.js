@@ -22,8 +22,8 @@ var config = {
     pageSize: 20,
 
     fileDir:{
-        src:'files/src',
-        dest: '/files/dest'
+        src: __dirname+'/public/files/src',
+        dest: __dirname +'/public/files/dest'
     }
 
 }

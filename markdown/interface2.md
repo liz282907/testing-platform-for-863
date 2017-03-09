@@ -32,3 +32,26 @@ response:
 
 
 ```
+2. 创建列表
+
+```javascript
+    url: yoursite/report/create
+    post
+    {
+        basic:{
+            "taskName": "testReport", //required
+             "terminalType": "",
+                  ...
+        },
+        items:{
+        
+        }
+    }
+    //success 201s
+    {
+                    success: '报告创建成功'
+                }
+
+
+```
+

@@ -26,6 +26,7 @@ exports.signup = function (req,res,next) {
     ep.on('validate_err',function (msg) {
         ep.unbind('validate_err');
         res.status(422).send({
+            status: 422,
             error: msg
         })
         // res.redirect('back')
@@ -51,6 +52,7 @@ exports.signup = function (req,res,next) {
     ]
     User.getUsersByOrQuery(orCondition,{},function (err,users) {
         if(err){
+            console.log(err);
             return next(err)
         }
         if(users.length>0){
@@ -98,6 +100,7 @@ exports.signin = function (req,res,next) {
     ep.on('login_err',function (msg) {
         ep.unbind('login_err')
         res.status(401).send({
+            status: 401,
             error: msg
         })
         return
@@ -105,7 +108,8 @@ exports.signin = function (req,res,next) {
 
     if(!loginname || !password){
         res.status(422).send({
-            error: '信息不完整'
+            error: '信息不完整',
+            status: 422,
         })
         return
     }
@@ -117,8 +121,12 @@ exports.signin = function (req,res,next) {
         getUser = User.getUserByName
 
     getUser(loginname,(err,user)=>{
-        if(err) return next(err)
-        if(!user) return ep.emit('login_err','用户名不存在')
+        if(err) {
+            console.log("-----------err in get user")
+            return next(err)
+        }
+        if(!user) return ep.emit('login_err','用户名不存在');
+        if(!user) console.log("----- login err trigger")
         tools.compareHash(password,user.pass,(err,equal)=>{
             if(err) return next(err);
             if(!equal){
@@ -127,7 +135,17 @@ exports.signin = function (req,res,next) {
             }
             authMiddleware.genSessionID(res); //其实可以省略的，如果下面采取session中间件的话
             req.session.user = user;
-            res.status(200).json({msg:'登录成功'});
+            res.status(200).json({
+                msg:'登录成功',
+                status: 200,
+                data:{
+                    userInfo: {
+                        username: user.username,
+                        email: user.email
+                    }
+                }
+
+            });
 
         })
 
@@ -138,7 +156,8 @@ exports.signout = function (req,res,next) {
     req.session.destroy(req.sessionID); //也可以不传参数，默认会用this.id===req.sessionID
     res.clearCookie(config.cookie_name,{path:'/'})     //deprecated
     res.status(200).json({
-        msg: "您已登出"
+        msg: "您已登出",
+        status: 200
     })
 }
 
@@ -146,10 +165,12 @@ exports.updatePassword = function (req,res,next) {
 
     const {pass,confirmPass,token,email} = req.body
 
-    if(pass!==confirmPass) return res.status(422).json({error:'两次密码不一致'})
+    if(pass!==confirmPass) return res.status(422).json({error:'两次密码不一致',status: 422})
     User.getUserByEmailAndToken({token,email},(err,user)=>{
         if(err) return next(err);
-        if(!user) return res.status(401).json({error:'未找到用户，或许您重置链接有误'})
+        if(!user) return res.status(401).json({
+            error:'未找到用户，或许您重置链接有误',
+            status:401})
 
         tools.hash(pass,(err,hashPass)=>{
             if(err) return next(err);
@@ -160,7 +181,7 @@ exports.updatePassword = function (req,res,next) {
             user.save((err)=> next(err));
             req.session.user = user;
 
-            res.status(200).json({success:'重置密码成功'})
+            res.status(200).json({success:'重置密码成功',status: 200})
         })
     })
 }
@@ -182,17 +203,23 @@ exports.showResetPage = function (req,res,next) {
     User.getUserByEmailAndToken({token,email},(err,user)=>{
         if(err) return next(err);
         if(!user) return res.status(403).json({
+            status:403,
             error: '用户不存在或密码错误，无法重置'
         })
         if(user.retrieveTime && util.moreThanOneDay(user.retrieveTime-Date.now())){
             res.status(401).json({
+                status: 401,
                 error: '链接已失效，请重新申请密码重置'
             })
         }
         //验证成功，将信息返回给客户端，随着下次的post一起发送
         res.status(200).json({
-            token,
-            email
+            status: 200,
+            data:{
+                token,
+                email
+            }
+
         })
 
     })
@@ -208,7 +235,7 @@ exports.showResetPage = function (req,res,next) {
 exports.retrievePass = function (req,res,next) {
     //邮箱
     const email = validator.trim(req.body.email);
-    if(!validator.isEmail(email)) return res.status(422).json({error: '邮箱不合法'})
+    if(!validator.isEmail(email)) return res.status(422).json({error: '邮箱不合法',status:422})
 
     const token = authMiddleware.genToken();
     const retrieveTime = Date.now()
@@ -217,7 +244,7 @@ exports.retrievePass = function (req,res,next) {
     User.getUserByMail(email,(err,user)=>{
         if(err) return next(err);
         if(!user){
-            res.status(401).json({error:"邮箱不存在"})
+            res.status(401).json({error:"邮箱不存在",status: 401})
             return
         }
         user.token = token
@@ -228,6 +255,8 @@ exports.retrievePass = function (req,res,next) {
             if(err) return next(err);
 
             res.status(200).json({
+                data: '',
+                status: 200,
                 msg: '我们已给您填写的电子邮箱发送了一封邮件，请在24小时内点击里面的链接来重置密码。'
             })
             /**

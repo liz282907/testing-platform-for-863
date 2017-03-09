@@ -80,6 +80,7 @@ chenlu.seu@gmail.com
      ```javascript
      {
          error: 'somemsg'
+      
      }
      
      ```
@@ -92,7 +93,12 @@ chenlu.seu@gmail.com
   
       ```javascript
      {
-          msg: "创建成功"
+           msg:'登录成功',
+           status: 200,
+           data: {
+               username: user.username,
+               email: user.email
+           }
      }
      
      ```
